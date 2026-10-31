@@ -259,14 +259,14 @@ function avatarSVG(no, equipped) {
   let hairBack = '';
   let hairFront = '';
   if (style === 'short') {
-    // 後腦勺短髮
-    hairBack = `<ellipse cx="60" cy="72" rx="30" ry="16" fill="${hair}"/>`;
-    // 前額刘海
-    hairFront = `<path d="M34 50 q8 -22 30 -22 q30 0 30 22 q-18 -10 -30 -10 q-12 0 -30 10z" fill="${hair}"/>`;
-    // 左側頭髮
-    hairFront += `<path d="M34 62 q-10 0 -14 16 q4 14 14 14 q10 0 14-16z" fill="${hair}"/>`;
-    // 右側頭髮
-    hairFront += `<path d="M86 62 q10 0 14 16 q-4 14 -14 14 q-10 0 -14-16z" fill="${hair}"/>`;
+    // 後腦勺短髮，圓潤
+    hairBack = `<ellipse cx="60" cy="74" rx="32" ry="18" fill="${hair}"/>`;
+    // 前額刘海，圓潤的貝澤曲線
+    hairFront = `<path d="M30 48 q10 -20 30 -20 q30 0 30 20 q-16 -8 -30 -8 q-14 0 -30 8z" fill="${hair}"/>`;
+    // 左側短頭髮
+    hairFront += `<path d="M32 64 q-8 0 -12 12 q4 10 12 10 q8 0 12-10z" fill="${hair}"/>`;
+    // 右側短頭髮
+    hairFront += `<path d="M88 64 q8 0 12 12 q-4 10 -12 10 q-8 0 -12-10z" fill="${hair}"/>`;
   } else if (style === 'bob') {
     // 齊耳短髮，後腦勺較長
     hairBack = `<ellipse cx="60" cy="78" rx="34" ry="24" fill="${hair}"/>`;
