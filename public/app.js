@@ -116,7 +116,7 @@ function itemById(id) { return (CATALOG && id) ? CATALOG[id] : null; }
 const SKINS = ['#FFE0C2', '#F7CFA9', '#E8B98C', '#C98F63'];
 const HAIRS = ['#5B4B6E', '#7A5C3E', '#3E3A55', '#9B6A3C', '#4A6E8A', '#8E5B8E'];
 const SHIRTS = ['#C9B6F0', '#FFE08A', '#9ED4F5', '#FFB4C2', '#A8E6C3', '#FFD3A5'];
-const HAIR_STYLES = ['short', 'bob', 'spiky', 'twin'];
+const HAIR_STYLES = ['short', 'bob', 'spiky', 'twin', 'long'];
 
 function rng(seed) {
   let s = seed * 2654435761 % 4294967296;
@@ -256,13 +256,47 @@ function avatarSVG(no, equipped) {
   const other = itemById(worn.other);
   const shirt = top ? top.visual.color : baseShirt;
 
-  let hairBack = style === 'twin'
-    ? `<circle cx="20" cy="66" r="12" fill="${hair}"/><circle cx="100" cy="66" r="12" fill="${hair}"/>` : '';
+  let hairBack = '';
   let hairFront = '';
-  if (style === 'short') hairFront = `<path d="M34 54 q4 -30 26 -30 q22 0 26 30 q-12 -12 -26 -12 q-14 0 -26 12z" fill="${hair}"/>`;
-  else if (style === 'bob') hairFront = `<path d="M32 74 q0 -46 28 -46 q28 0 28 46 q-8 -20 -28 -20 q-20 0 -28 20z" fill="${hair}"/>`;
-  else if (style === 'spiky') hairFront = `<path d="M34 52 l6 -14 l8 10 l7 -16 l8 14 l9 -12 l6 16 q-14 -10 -26 -8 q-12 2 -18 10z" fill="${hair}"/>`;
-  else hairFront = `<path d="M32 56 q4 -32 28 -32 q24 0 28 32 q-14 -14 -28 -14 q-14 0 -28 14z" fill="${hair}"/>`;
+  if (style === 'short') {
+    // 後腦勺短髮
+    hairBack = `<ellipse cx="60" cy="72" rx="30" ry="16" fill="${hair}"/>`;
+    // 前額刘海
+    hairFront = `<path d="M34 50 q8 -22 30 -22 q30 0 30 22 q-18 -10 -30 -10 q-12 0 -30 10z" fill="${hair}"/>`;
+    // 左側頭髮
+    hairFront += `<path d="M34 62 q-10 0 -14 16 q4 14 14 14 q10 0 14-16z" fill="${hair}"/>`;
+    // 右側頭髮
+    hairFront += `<path d="M86 62 q10 0 14 16 q-4 14 -14 14 q-10 0 -14-16z" fill="${hair}"/>`;
+  } else if (style === 'bob') {
+    // 齊耳短髮，後腦勺較長
+    hairBack = `<ellipse cx="60" cy="78" rx="34" ry="24" fill="${hair}"/>`;
+    // 前額刘海
+    hairFront = `<path d="M32 52 q8 -24 30 -24 q30 0 30 24 q-18 -12 -30 -12 q-12 0 -30 12z" fill="${hair}"/>`;
+    // 左側頭髮及肩
+    hairFront += `<path d="M32 70 q-12 0 -18 20 q6 20 18 20 q12 0 18-20z" fill="${hair}"/>`;
+    // 右側頭髮及肩
+    hairFront += `<path d="M88 70 q12 0 18 20 q-6 20 -18 20 q-12 0 -18-20z" fill="${hair}"/>`;
+  } else if (style === 'spiky') {
+    // 尖頭髮，多層尖角
+    hairBack = `<path d="M30 60 q10 -10 20 -10 q10 10 20 10 q10 -10 20 -10 q10 10 20 10 q10 -10 20 -10 q10 10 20 10q-30 0 -60 0z" fill="${hair}"/>`;
+    hairFront = `<path d="M34 48 q6 -20 28 -20 q28 0 28 20 q-16 -12 -28 -12 q-12 0 -28 12z" fill="${hair}"/>`;
+  } else if (style === 'twin') {
+    // 雙馬尾：後腦勺 + 兩個馬尾圈
+    hairBack = `<ellipse cx="60" cy="70" rx="28" ry="14" fill="${hair}"/>`;
+    hairFront = `<path d="M34 52 q8 -20 30 -20 q30 0 30 20 q-18 -10 -30 -10 q-12 0 -30 10z" fill="${hair}"/>`;
+    // 左馬尾
+    hairBack += `<circle cx="24" cy="70" r="11" fill="${hair}"/><circle cx="24" cy="70" r="7" fill="${skin}"/>`;
+    // 右馬尾
+    hairBack += `<circle cx="96" cy="70" r="11" fill="${hair}"/><circle cx="96" cy="70" r="7" fill="${skin}"/>`;
+  } else if (style === 'long') {
+    // 長髮，及腰
+    hairBack = `<path d="M30 56 q20 -10 60 0 q-20 30 -60 30 q-40 0 -40-30z" fill="${hair}"/>`;
+    hairFront = `<path d="M34 50 q8 -22 30 -22 q30 0 30 22 q-18 -10 -30 -10 q-12 0 -30 10z" fill="${hair}"/>`;
+    // 左側長髮
+    hairFront += `<path d="M34 72 q-12 0 -18 40 q6 40 18 40 q12 0 18-40z" fill="${hair}"/>`;
+    // 右側長髮
+    hairFront += `<path d="M86 72 q12 0 18 40 q-6 40 -18 40 q-12 0 -18-40z" fill="${hair}"/>`;
+  }
 
   return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="60" cy="124" rx="34" ry="5.5" fill="rgba(155,127,212,.18)"/>
