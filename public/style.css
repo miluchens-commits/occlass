@@ -757,3 +757,203 @@ select { appearance: auto; }
   .house-viewer-panel { width: 98vw; height: 90vh; border-radius: 16px; }
   .house-viewer-header h3 { font-size: 16px; }
   .viewer-btn { width: 32px; height: 32px; font-size: 16px; }
+
+/* ---------------- 第五版：學習段位 ---------------- */
+.rank-card-screen .rank-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.rank-card-screen .rank-tab {
+  flex: 0 0 auto;
+  border: none;
+  background: rgba(255,255,255,.7);
+  color: #7c6c98;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rank-card-screen .rank-tab.active {
+  background: #7c6c98;
+  color: #fff;
+}
+.rank-card-screen .rank-tab:hover:not(.active) {
+  background: #e8e0f8;
+}
+.rank-view {
+  animation: rankFade .4s ease-out;
+}
+@keyframes rankFade { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
+.rank-card {
+  background: linear-gradient(135deg, #fff7dd 0%, #f0e7ff 100%);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 30px rgba(91, 75, 110, .18);
+}
+.rank-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.rank-subject-icon { font-size: 24px; }
+.rank-subject-name { font-size: 18px; font-weight: 900; color: #5b4b6e; }
+.rank-badge {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 900;
+  background: rgba(124, 108, 154, .1);
+  border: 1px solid rgba(124, 108, 154, .3);
+}
+.rank-rp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,.6);
+  border-radius: 16px;
+}
+.rp-label { font-size: 12px; color: #7c6c98; }
+.rp-value { font-size: 20px; font-weight: 900; color: #5b4b6e; }
+.rank-season {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: rgba(255,255,255,.5);
+  border-radius: 16px;
+  font-size: 13px;
+  color: #7c6c98;
+}
+.rank-season-high { color: #b87333; font-weight: 900; }
+.rank-progress { margin-bottom: 20px; }
+.progress-track {
+  height: 10px;
+  background: #e8e0f8;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 5px;
+  transition: width .5s ease;
+}
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #7c6c98;
+}
+.rank-history { margin-top: 20px; }
+.rank-history h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #5b4b6e;
+  font-weight: 900;
+}
+.rank-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rank-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.7);
+  border-radius: 10px;
+  font-size: 12px;
+}
+.rank-history-reason { color: #5b4b6e; font-weight: 700; }
+.rank-history-rp { color: #3f9d6d; font-weight: 900; }
+.rank-history-arrow { color: #7c6c98; font-size: 11px; }
+.rank-history-empty {
+  padding: 12px;
+  color: #9a8fae;
+  font-size: 12px;
+  text-align: center;
+}
+.rank-gain-badge {
+  display: inline-block;
+  background: #3f9d6d;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: 8px;
+}
+@media (max-width: 560px) {
+  .rank-card-screen .rank-tabs { gap: 2px; }
+  .rank-card-screen .rank-tab { padding: 6px 10px; font-size: 12px; }
+  .rank-card { padding: 16px; }
+}
+
+/* 段位獎勵標籤 */
+.rank-tag {
+  background: #e8f4ea;
+  color: #3f9d6d;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.rank-reward-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+.rank-reward-head .sub-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #5b4b6e;
+}
+
+/* 教師段位表格 */
+.teacher-rank-list-wrap {
+  margin-top: 16px;
+}
+.rank-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+.rank-table-header {
+  display: flex;
+  padding: 10px 16px;
+  background: #f0e7ff;
+  border-radius: 12px 12px 0 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #7c6c98;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rank-table-header span { flex: 1; }
+.rank-table-body {
+  display: flex;
+  flex-direction: column;
+}
+.rank-table-row {
+  display: flex;
+  padding: 10px 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(91, 75, 110, .08);
+  align-items: center;
+}
+.rank-table-row span { flex: 1; font-size: 13px; color: #5b4b6e; }
+.rank-table-row .col-rank { font-weight: 900; }
+.rank-table-row .col-rp { font-weight: 800; color: #3f9d6d; }

@@ -211,6 +211,33 @@
         <button id="aiAddAbility" class="btn btn-mini" type="button">＋ 新增能力增益</button>
       </div>
       <div id="aiAbilities" class="ability-editor"></div>
+      <div class="rank-reward-head">
+        <span class="sub-title">段位獎勵（可不設定）</span>
+      </div>
+      <div class="form-row">
+        <label class="field">
+          <span>開啟段位獎勵</span>
+          <select id="aiRankEnabled" class="select">
+            <option value="0">否</option>
+            <option value="1">是</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>獎勵科目</span>
+          <select id="aiRankSubject" class="select">
+            <option value="natural">自然</option>
+            <option value="social">社會</option>
+            <option value="pe">體育</option>
+            <option value="computer">電腦</option>
+            <option value="chinese">國語</option>
+            <option value="math">數學</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>增加 RP</span>
+          <input id="aiRankRP" type="number" inputmode="numeric" min="1" max="999" placeholder="例如 20">
+        </label>
+      </div>
       <p id="aiError" class="error hidden"></p>
       <p id="aiOk" class="success hidden"></p>
       <button id="aiSubmit" class="btn btn-primary btn-big" type="button">派發作業</button>
@@ -253,6 +280,33 @@
         <button id="aaAddAbility" class="btn btn-mini" type="button">＋ 新增能力增益</button>
       </div>
       <div id="aaAbilities" class="ability-editor"></div>
+      <div class="rank-reward-head">
+        <span class="sub-title">段位獎勵（可不設定）</span>
+      </div>
+      <div class="form-row">
+        <label class="field">
+          <span>開啟段位獎勵</span>
+          <select id="aaRankEnabled" class="select">
+            <option value="0">否</option>
+            <option value="1">是</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>獎勵科目</span>
+          <select id="aaRankSubject" class="select">
+            <option value="natural">自然</option>
+            <option value="social">社會</option>
+            <option value="pe">體育</option>
+            <option value="computer">電腦</option>
+            <option value="chinese">國語</option>
+            <option value="math">數學</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>增加 RP</span>
+          <input id="aaRankRP" type="number" inputmode="numeric" min="1" max="999" placeholder="例如 20">
+        </label>
+      </div>
       <p id="aaError" class="error hidden"></p>
       <p id="aaOk" class="success hidden"></p>
       <button id="aaSubmit" class="btn btn-primary btn-big" type="button">派發作業</button>
@@ -265,6 +319,19 @@
       <h2 class="title-sm">作業紀錄</h2>
       <p class="hint">每份作業的全班完成狀態都會保存在伺服器。</p>
       <div id="recordsList" class="records-list"></div>
+    </div>
+  </section>
+
+  <!-- 教師：班級段位 -->
+  <section id="screen-t-rank" class="screen hidden">
+    <div class="card card-wide rank-card-screen">
+      <div class="house-head">
+        <div>
+          <h2 class="title-sm">🛡️ 班級段位</h2>
+          <p class="hint">查看全班各科目的段位與 RP 積分。</p>
+        </div>
+      </div>
+      <div id="teacherRankList"></div>
     </div>
   </section>
 
@@ -600,6 +667,19 @@
         <button id="cardBuyBtn" class="btn btn-primary btn-big" type="button">用 500 鑽石解鎖全部家具</button>
         <p class="tip">每個帳號只能購買一次；購買後不會再重複扣款。</p>
       </div>
+    </div>
+  </section>
+
+  <!-- 學生：學習段位 -->
+  <section id="screen-s-rank" class="screen hidden">
+    <div class="card card-wide rank-card-screen">
+      <div class="house-head">
+        <div>
+          <h2 class="title-sm">🛡️ 學習段位</h2>
+          <p class="hint">每個科目都有獨立的 RP 積分與段位，完成作業後自動累積。</p>
+        </div>
+      </div>
+      <div id="rankContainer"></div>
     </div>
   </section>
 

@@ -10,12 +10,12 @@ const $ = (id) => document.getElementById(id);
 
 // 第二版與第三版畫面
 const TEACHER_SCREENS = ['teacher-home', 't-assign-individual', 't-assign-all', 't-records', 't-settings', 't-password'];
-const STUDENT_SCREENS = ['s-home', 's-assignments', 's-shop', 's-store', 's-wardrobe', 's-chest', 's-house', 's-card'];
+const STUDENT_SCREENS = ['s-home', 's-assignments', 's-shop', 's-store', 's-wardrobe', 's-chest', 's-house', 's-card', 's-rank'];
 const ALL_SCREENS = [
   'setup', 'role',
   'teacher-password-set', 'teacher-password-login', 'teacher-setup', 'teacher-home',
-  't-assign-individual', 't-assign-all', 't-records', 't-settings', 't-password',
-  'student-login', 's-home', 's-assignments', 's-shop', 's-store', 's-wardrobe', 's-chest', 's-house', 's-card'
+  't-assign-individual', 't-assign-all', 't-records', 't-rank', 't-settings', 't-password',
+  'student-login', 's-home', 's-assignments', 's-shop', 's-store', 's-wardrobe', 's-chest', 's-house', 's-card', 's-rank'
 ];
 
 const MENU = {
@@ -23,6 +23,7 @@ const MENU = {
     ['t-assign-individual', '📝', '個別作業派發'],
     ['t-assign-all', '📚', '全班作業派發'],
     ['t-records', '🗂️', '作業紀錄'],
+    ['t-rank', '🛡️', '班級段位'],
     ['t-settings', '⚙️', '設定'],
     ['t-password', '🔑', '教師密碼修改']
   ],
@@ -31,6 +32,7 @@ const MENU = {
     ['s-house', '🏠', 'OC 房子'],
     ['s-card', '🎴', '家具全擁有卡'],
     ['s-assignments', '📖', '我的作業'],
+    ['s-rank', '🛡️', '學習段位'],
     ['s-shop', '🪙', '鑽石兌換'],
     ['s-store', '💎', '鑽石商店'],
     ['s-wardrobe', '👕', '我的服飾'],
@@ -450,6 +452,7 @@ function render(name) {
     else if (name === 't-assign-individual') renderAssignIndividual();
     else if (name === 't-assign-all') renderAssignAll();
     else if (name === 't-records') renderRecords();
+    else if (name === 't-rank') renderTeacherRank();
     else if (name === 't-settings') renderSettings();
     else if (name === 't-password') renderPasswordPage();
     else if (name === 's-home') renderStudentHome();
@@ -460,6 +463,7 @@ function render(name) {
     else if (name === 's-chest') renderChest();
     else if (name === 's-house') renderHouse();
     else if (name === 's-card') renderCard();
+    else if (name === 's-rank') renderRank();
   } catch (e) {
     console.error(e);
   }
@@ -845,8 +849,19 @@ async function submitAssignment(scope) {
   const body = {
     scope, title, content, dueDate: dueDate || null,
     exp: Number(exp), coins: Number(coins),
-    abilityRewards: ability.rewards
+    abilityRewards: ability.rewards,
+    rankReward: null
   };
+  const rankEnabled = $(isInd ? 'aiRankEnabled' : 'aaRankEnabled').value;
+  const rankSubject = $(isInd ? 'aiRankSubject' : 'aaRankSubject').value;
+  const rankRP = $(isInd ? 'aiRankRP' : 'aaRankRP').value.trim();
+  if (rankEnabled === '1' && rankRP) {
+    body.rankReward = {
+      enabled: true,
+      subject: rankSubject,
+      rp: Number(rankRP)
+    };
+  }
   if (isInd) body.targetNos = [...aiSelected];
 
   const { data } = await api('/api/assignments', { method: 'POST', body: JSON.stringify(body) });
@@ -856,6 +871,7 @@ async function submitAssignment(scope) {
   if (isInd) {
     $('aiTitle').value = ''; $('aiContent').value = ''; $('aiDue').value = '';
     $('aiExp').value = ''; $('aiCoins').value = '';
+    $('aiRankEnabled').value = '0'; $('aiRankRP').value = '';
     resetAbilityEditor('aiAbilities');
     aiSelected.clear();
     document.querySelectorAll('#aiStudents .pick-item').forEach(el => el.classList.remove('checked'));
@@ -863,6 +879,7 @@ async function submitAssignment(scope) {
   } else {
     $('aaTitle').value = ''; $('aaContent').value = ''; $('aaDue').value = '';
     $('aaExp').value = ''; $('aaCoins').value = '';
+    $('aaRankEnabled').value = '0'; $('aaRankRP').value = '';
     resetAbilityEditor('aaAbilities');
   }
   toast('作業已派發');
@@ -912,6 +929,69 @@ async function renderRecords() {
       <div class="record-people">${people}</div>`;
     box.appendChild(card);
   });
+}
+
+async function renderTeacherRank() {
+  const { data } = await api('/api/rank/teacher');
+  if (!data.ok) return toast(data.message);
+  const box = $('teacherRankList');
+  box.innerHTML = '';
+
+  // 科目標籤
+  const tabBar = document.createElement('div');
+  tabBar.className = 'rank-tabs';
+  data.subjects.forEach(subj => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rank-tab' + (subj.id === 'math' ? ' active' : '');
+    btn.dataset.subject = subj.id;
+    btn.textContent = subj.name;
+    btn.addEventListener('click', () => {
+      tabBar.querySelectorAll('.rank-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTeacherRankSubject(subj.id, data);
+    });
+    tabBar.appendChild(btn);
+  });
+  box.appendChild(tabBar);
+
+  const listWrap = document.createElement('div');
+  listWrap.className = 'teacher-rank-list-wrap';
+  box.appendChild(listWrap);
+
+  renderTeacherRankSubject('math', data);
+}
+
+function renderTeacherRankSubject(subjectId, data) {
+  const wrap = $('teacherRankList').querySelector('.teacher-rank-list-wrap');
+  if (!wrap) return;
+  const tier = data.rankTiers.find(t => t.name === '青銅');
+  wrap.innerHTML = `
+    <div class="rank-table">
+      <div class="rank-table-header">
+        <span>座號</span>
+        <span>登入號碼</span>
+        <span>段位</span>
+        <span>RP</span>
+        <span>賽季最高</span>
+      </div>
+      <div class="rank-table-body">
+        ${data.students.map(s => {
+          const r = s.ranks[subjectId];
+          const currentTier = data.rankTiers.find(t => t.name === r.rank);
+          return `
+            <div class="rank-table-row">
+              <span class="col-no">${s.no}</span>
+              <span class="col-code">${s.loginCode}</span>
+              <span class="col-rank" style="color:${currentTier.color}">${r.rank}</span>
+              <span class="col-rp">${r.rp}</span>
+              <span class="col-high">${r.seasonHigh}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function escapeHtml(s) {
@@ -983,6 +1063,7 @@ function renderAssignments(container, list, emptyText) {
         <span class="tag exp">+${a.exp} 經驗值</span>
         <span class="tag coin">+${a.coins} OC 金幣</span>
         ${abilityTags(a)}
+        ${a.rankReward ? `<span class="tag rank-tag">🛡️ ${a.rankReward.subjectName}段位 +${a.rankReward.rp} RP</span>` : ''}
         ${dueTag}
       </div>
       <div class="assign-foot">
@@ -2011,6 +2092,111 @@ $('houseNameCancel').addEventListener('click', () => {
   if (houseData && houseData.isNamed) showHouseRoom();
   else showHouseNaming(false);
 });
+
+/* ---------------- 第五版：學習段位 ---------------- */
+let rankData = null;
+
+async function renderRank() {
+  const [rankRes, meRes] = await Promise.all([
+    api('/api/rank'),
+    api('/api/student/me')
+  ]);
+  if (!rankRes.data.ok) return toast(rankRes.data.message || '讀不到段位資料。');
+  rankData = rankRes.data;
+  const st = meRes.data.ok ? meRes.data.student : null;
+  if (!st) return;
+
+  const container = $('rankContainer');
+  container.innerHTML = '';
+
+  // 科目選擇標籤
+  const tabBar = document.createElement('div');
+  tabBar.className = 'rank-tabs';
+  rankData.subjects.forEach(subj => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rank-tab' + (subj.id === 'math' ? ' active' : '');
+    btn.dataset.subject = subj.id;
+    btn.textContent = subj.name;
+    btn.addEventListener('click', () => {
+      tabBar.querySelectorAll('.rank-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRankSubject(subj.id, st);
+    });
+    tabBar.appendChild(btn);
+  });
+  container.appendChild(tabBar);
+
+  // 段位顯示區
+  const rankView = document.createElement('div');
+  rankView.className = 'rank-view';
+  rankView.id = 'rankView';
+  container.appendChild(rankView);
+
+  // 預設顯示數學
+  renderRankSubject('math', st);
+}
+
+function renderRankSubject(subjectId, student) {
+  const view = $('rankView');
+  if (!view) return;
+  const subj = rankData.subjects.find(s => s.id === subjectId);
+  const rankInfo = rankData.ranks[subjectId];
+  if (!subj || !rankInfo) return;
+
+  const nextRank = getNextRankByRP(rankInfo.rp, rankData.rankTiers);
+  const currentTier = rankData.rankTiers.find(t => t.name === rankInfo.rank);
+  const progress = nextRank
+    ? Math.min(100, ((rankInfo.rp - currentTier.rp) / (nextRank.rp - currentTier.rp)) * 100)
+    : 100;
+  const rpNeeded = nextRank ? Math.max(0, nextRank.rp - rankInfo.rp) : 0;
+
+  view.innerHTML = `
+    <div class="rank-card">
+      <div class="rank-header">
+        <span class="rank-subject-icon">🛡️</span>
+        <span class="rank-subject-name">${subj.name}</span>
+        <span class="rank-badge" style="color:${currentTier.color}">${rankInfo.rank}</span>
+      </div>
+      <div class="rank-rp">
+        <span class="rp-label">目前 RP 積分</span>
+        <span class="rp-value">${rankInfo.rp}</span>
+      </div>
+      <div class="rank-season">
+        <span class="rp-label">本賽季最高段位</span>
+        <span class="rp-value rank-season-high">${rankInfo.seasonHigh}</span>
+      </div>
+      <div class="rank-progress">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:${progress}%; background:${currentTier.color}"></div>
+        </div>
+        <div class="progress-text">
+          <span>下一段位：${nextRank ? nextRank.name : '已達最高'}</span>
+          <span>${rpNeeded > 0 ? `還需 ${rpNeeded} RP` : '─'}</span>
+        </div>
+      </div>
+      <div class="rank-history">
+        <h4>最近紀錄</h4>
+        <div class="rank-history-list">
+          ${rankInfo.history.slice().reverse().slice(0, 5).map(h => `
+            <div class="rank-history-item">
+              <span class="rank-history-reason">${h.reason}</span>
+              <span class="rank-history-rp">+${h.rp} RP</span>
+              <span class="rank-history-arrow">${h.from} → ${h.to}</span>
+            </div>
+          `).join('') || '<div class="rank-history-empty">暫無紀錄</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getNextRankByRP(rp, tiers) {
+  for (const t of tiers) {
+    if (rp < t.rp) return t;
+  }
+  return null;
+}
 
 /* ---------------- 登出與重設 ---------------- */
 $('logoutBtn').addEventListener('click', async () => {

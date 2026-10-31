@@ -315,6 +315,78 @@ function zeroStats() {
   return { imagination: 0, intelligence: 0, honesty: 0, effort: 0, attitude: 0 };
 }
 
+/* ---------------- 第五版：學習段位系統 ---------------- */
+// 六個科目
+const SUBJECTS = [
+  { id: 'natural', name: '自然' },
+  { id: 'social', name: '社會' },
+  { id: 'pe', name: '體育' },
+  { id: 'computer', name: '電腦' },
+  { id: 'chinese', name: '國語' },
+  { id: 'math', name: '數學' }
+];
+
+// 段位等級（由低到高，RP 門檻）
+const RANK_TIERS = [
+  { name: '青銅', rp: 0, color: '#B87333' },
+  { name: '白銀', rp: 100, color: '#C0C0C0' },
+  { name: '黃金', rp: 300, color: '#FFD700' },
+  { name: '白金', rp: 600, color: '#E5E4E2' },
+  { name: '鑽石', rp: 1000, color: '#B9F2FF' },
+  { name: '大師', rp: 1500, color: '#7B68EE' },
+  { name: '宗師', rp: 2500, color: '#4B0082' }
+];
+
+function getRankByRP(rp) {
+  let rank = RANK_TIERS[0];
+  for (const t of RANK_TIERS) {
+    if (rp >= t.rp) rank = t;
+  }
+  return rank;
+}
+
+function getNextRank(rp) {
+  for (const t of RANK_TIERS) {
+    if (rp < t.rp) return t;
+  }
+  return null; // 已達最高段位
+}
+
+function defaultRankData() {
+  const out = {};
+  SUBJECTS.forEach(s => {
+    out[s.id] = {
+      rp: 0,
+      rank: '青銅',
+      seasonHigh: '青銅',
+      history: []
+    };
+  });
+  return out;
+}
+
+function normalizeRanks(src) {
+  const out = {};
+  SUBJECTS.forEach(s => {
+    const subj = (src && src[s.id]) || {};
+    out[s.id] = {
+      rp: Math.max(0, Math.floor(Number(subj.rp) || 0)),
+      rank: subj.rank || '青銅',
+      seasonHigh: subj.seasonHigh || '青銅',
+      history: Array.isArray(subj.history) ? subj.history.slice(-50) : []
+    };
+    // 確保段位與 RP 一致
+    const realRank = getRankByRP(out[s.id].rp);
+    if (realRank.rp > RANK_TIERS.find(t => t.name === out[s.id].rank).rp) {
+      out[s.id].rank = realRank.name;
+    }
+    if (RANK_TIERS.find(t => t.name === out[s.id].seasonHigh).rp < RANK_TIERS.find(t => t.name === out[s.id].rank).rp) {
+      out[s.id].seasonHigh = out[s.id].rank;
+    }
+  });
+  return out;
+}
+
 function defaultEquipped() {
   return { hat: null, glasses: null, top: null, pants: null, shoes: null, back: null, other: null };
 }
@@ -577,7 +649,8 @@ function publicStudent(s, full) {
     diamonds: s.diamonds,
     expNeeded: expNeeded(s.level),
     equipped: Object.assign({}, s.equipped || defaultEquipped()),
-    stats: statsOf(s)
+    stats: statsOf(s),
+    ranks: s.ranks ? normalizeRanks(s.ranks) : defaultRankData()
   };
   if (full) out.collection = Object.assign({}, s.collection || {});
   return out;
@@ -613,7 +686,9 @@ function loadDb() {
       stats: normalizeStats(s.stats),
       collection: normalizeCollection(s.collection),
       equipped: normalizeEquipped(s.equipped),
-      house: normalizeHouse(s.house)
+      house: normalizeHouse(s.house),
+      // 第五版新增：學習段位
+      ranks: normalizeRanks(s.ranks)
     }));
     db.assignments = (raw.assignments || []).map(a => Object.assign({}, a, {
       records: a.records || {},
@@ -966,7 +1041,8 @@ app.post('/api/class/create', requireTeacher, (req, res) => {
   const codes = makeLoginCodes(studentCount);
   db.students = codes.map((c, i) => ({
     no: i + 1, loginCode: c, level: 1, exp: 0, coins: 0, diamonds: 0,
-    stats: zeroStats(), collection: {}, equipped: defaultEquipped(), house: emptyHouse()
+    stats: zeroStats(), collection: {}, equipped: defaultEquipped(), house: emptyHouse(),
+    ranks: defaultRankData()
   }));
   db.class = { code: classCode, grade: req.session.grade, klass: req.session.klass, studentCount, createdAt: Date.now() };
   saveDb();
@@ -1014,7 +1090,21 @@ function validateAssignmentBody(body) {
     }
   }
 
-  return { title, content, exp, coins, dueDate: dueDate || null, abilityRewards };
+  // 第五版：段位獎勵
+  let rankReward = null;
+  const rawRR = body.rankReward;
+  if (rawRR && rawRR.enabled) {
+    const subjectId = String(rawRR.subject || '');
+    const subject = SUBJECTS.find(s => s.id === subjectId);
+    const rp = Number(rawRR.rp);
+    if (!subject) return { error: '段位獎勵請選擇有效的科目。' };
+    if (!Number.isInteger(rp) || rp < 1 || rp > 999) {
+      return { error: '段位獎勵 RP 請輸入 1 到 999 的整數。' };
+    }
+    rankReward = { subject: subjectId, subjectName: subject.name, rp, enabled: true };
+  }
+
+  return { title, content, exp, coins, dueDate: dueDate || null, abilityRewards, rankReward };
 }
 
 app.post('/api/assignments', requireTeacher, (req, res) => {
@@ -1043,6 +1133,7 @@ app.post('/api/assignments', requireTeacher, (req, res) => {
     exp: v.exp,
     coins: v.coins,
     abilityRewards: v.abilityRewards,
+    rankReward: v.rankReward,
     scope,
     targetNos,
     createdAt: Date.now(),
@@ -1067,7 +1158,9 @@ app.get('/api/assignments', requireTeacher, (req, res) => {
     students: db.students.map(s => ({ no: s.no, level: s.level, exp: s.exp, coins: s.coins, diamonds: s.diamonds })),
     assignments: db.assignments.map(a => ({
       id: a.id, title: a.title, content: a.content, dueDate: a.dueDate,
-      exp: a.exp, coins: a.coins, abilityRewards: a.abilityRewards || {}, scope: a.scope, targetNos: a.targetNos,
+      exp: a.exp, coins: a.coins, abilityRewards: a.abilityRewards || {},
+      rankReward: a.rankReward || null,
+      scope: a.scope, targetNos: a.targetNos,
       createdAt: a.createdAt, records: a.records
     }))
   });
@@ -1088,10 +1181,37 @@ app.post('/api/assignments/:id/complete', requireStudent, (req, res) => {
 
   record.completed = true;
   record.completedAt = Date.now();
+  const rankGains = [];
   if (!record.rewarded) {
     award(st, a.exp, a.coins);       // 經驗值與金幣只發放一次
     addStats(st, a.abilityRewards);  // 能力增益也只發放一次
     record.rewarded = true;
+
+    // 第五版：段位獎勵 RP
+    if (a.rankReward && a.rankReward.enabled) {
+      const subjId = a.rankReward.subject;
+      const rp = a.rankReward.rp;
+      if (st.ranks && st.ranks[subjId]) {
+        st.ranks[subjId].rp += rp;
+        const oldRank = st.ranks[subjId].rank;
+        const newRank = getRankByRP(st.ranks[subjId].rp);
+        st.ranks[subjId].rank = newRank.name;
+        // 更新賽季最高段位
+        const oldHigh = RANK_TIERS.find(t => t.name === st.ranks[subjId].seasonHigh);
+        const newHigh = RANK_TIERS.find(t => t.name === newRank.name);
+        if (newHigh && oldHigh && newHigh.rp > oldHigh.rp) {
+          st.ranks[subjId].seasonHigh = newRank.name;
+        }
+        st.ranks[subjId].history.push({
+          at: Date.now(),
+          rp,
+          from: oldRank,
+          to: newRank.name,
+          reason: `完成作業：${a.title}`
+        });
+        rankGains.push({ subject: subjId, subjectName: a.rankReward.subjectName, rp, from: oldRank, to: newRank.name });
+      }
+    }
   }
   saveDb();
 
@@ -1099,10 +1219,93 @@ app.post('/api/assignments/:id/complete', requireStudent, (req, res) => {
     .filter(k => a.abilityRewards && a.abilityRewards[k] > 0)
     .map(k => `${STAT_NAMES[k]} +${a.abilityRewards[k]}`)
     .join('、');
+  let rankMsg = '';
+  if (rankGains.length > 0) {
+    rankMsg = `，以及 ${rankGains.map(g => `${g.subjectName}段位 +${g.rp} RP${g.to !== g.from ? `（${g.from}→${g.to}）` : ''}`).join('、')}`;
+  }
   res.json({
     ok: true,
-    message: `完成！獲得 ${a.exp} 經驗值、${a.coins} OC 金幣${gains ? `，以及 ${gains}` : ''}。`,
-    student: publicStudent(st, true)
+    message: `完成！獲得 ${a.exp} 經驗值、${a.coins} OC 金幣${gains ? `，以及 ${gains}` : ''}${rankMsg}。`,
+    student: publicStudent(st, true),
+    rankGains
+  });
+});
+
+/* ---------------- 第五版：學習段位 API ---------------- */
+// 學生：取得自己的所有段位資料
+app.get('/api/rank', requireStudent, (req, res) => {
+  const st = myStudent(req.session);
+  if (!st) return res.status(404).json({ ok: false, message: '找不到你的資料。' });
+  res.json({
+    ok: true,
+    subjects: SUBJECTS,
+    ranks: st.ranks ? normalizeRanks(st.ranks) : defaultRankData(),
+    rankTiers: RANK_TIERS
+  });
+});
+
+// 學生：領取作業段位獎勵（已在完成作業時自動發放，此 endpoint 主要用於重新同步）
+app.post('/api/rank/claim', requireStudent, (req, res) => {
+  const { assignmentId, subject } = req.body || {};
+  const st = myStudent(req.session);
+  if (!st) return res.status(404).json({ ok: false, message: '找不到你的資料。' });
+  if (!assignmentId || !subject) return res.status(400).json({ ok: false, message: '缺少參數。' });
+
+  const a = findAssignment(assignmentId);
+  if (!a) return res.status(404).json({ ok: false, message: '找不到這份作業。' });
+  const key = String(st.no);
+  if (!a.records[key] || !a.records[key].completed) {
+    return res.status(400).json({ ok: false, message: '你尚未完成這份作業。' });
+  }
+  if (!a.rankReward || !a.rankReward.enabled || a.rankReward.subject !== subject) {
+    return res.status(400).json({ ok: false, message: '這份作業沒有該科目的段位獎勵。' });
+  }
+
+  // 檢查是否已經發過（透過 records 中的 rewardedRank 欄位）
+  if (a.records[key].rewardedRank) {
+    return res.json({ ok: true, already: true, message: '這份作業的段位獎勵已經領取過囉。', ranks: st.ranks });
+  }
+
+  const rp = a.rankReward.rp;
+  st.ranks[subject].rp += rp;
+  const oldRank = st.ranks[subject].rank;
+  const newRank = getRankByRP(st.ranks[subject].rp);
+  st.ranks[subject].rank = newRank.name;
+  const oldHigh = RANK_TIERS.find(t => t.name === st.ranks[subject].seasonHigh);
+  const newHigh = RANK_TIERS.find(t => t.name === newRank.name);
+  if (newHigh && oldHigh && newHigh.rp > oldHigh.rp) {
+    st.ranks[subject].seasonHigh = newRank.name;
+  }
+  st.ranks[subject].history.push({
+    at: Date.now(),
+    rp,
+    from: oldRank,
+    to: newRank.name,
+    reason: `完成作業：${a.title}`
+  });
+  a.records[key].rewardedRank = true;
+  saveDb();
+
+  res.json({
+    ok: true,
+    message: `段位獎勵！${a.rankReward.subjectName} +${rp} RP${newRank.name !== oldRank ? `（${oldRank}→${newRank.name}）` : ''}`,
+    ranks: st.ranks
+  });
+});
+
+// 教師：取得全班段位概覽
+app.get('/api/rank/teacher', requireTeacher, (req, res) => {
+  if (!db.class) return res.status(404).json({ ok: false, message: '尚未建立班級。' });
+  const classRanks = db.students.map(s => ({
+    no: s.no,
+    loginCode: s.loginCode,
+    ranks: s.ranks ? normalizeRanks(s.ranks) : defaultRankData()
+  }));
+  res.json({
+    ok: true,
+    subjects: SUBJECTS,
+    rankTiers: RANK_TIERS,
+    students: classRanks
   });
 });
 
@@ -1127,7 +1330,9 @@ app.get('/api/student/assignments', requireStudent, (req, res) => {
     .filter(a => a.records[key])
     .map(a => ({
       id: a.id, title: a.title, content: a.content, dueDate: a.dueDate,
-      exp: a.exp, coins: a.coins, abilityRewards: a.abilityRewards || {}, scope: a.scope, createdAt: a.createdAt,
+      exp: a.exp, coins: a.coins, abilityRewards: a.abilityRewards || {},
+      rankReward: a.rankReward || null,
+      scope: a.scope, createdAt: a.createdAt,
       completed: !!a.records[key].completed,
       completedAt: a.records[key].completedAt
     }));
