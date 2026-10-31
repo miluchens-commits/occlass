@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OC class</title>
+<link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+<div class="bg-deco">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="sun"></div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-logo">🎀</span>
+    <span class="brand-name">OC class</span>
+  </div>
+  <div class="topbar-right">
+    <span id="roleBadge" class="role-badge hidden"></span>
+    <button id="logoutBtn" class="btn btn-mini btn-ghost hidden" type="button">登出</button>
+    <button id="resetBtn" class="btn btn-mini btn-ghost" type="button">重設</button>
+    <button id="menuBtn" class="btn btn-menu hidden" type="button" aria-label="開啟選單">☰</button>
+  </div>
+</header>
+
+<!-- 右側三條槓選單 -->
+<div id="drawerMask" class="drawer-mask hidden"></div>
+<aside id="drawer" class="drawer hidden" aria-label="選單">
+  <div class="drawer-head">
+    <span>選單</span>
+    <button id="drawerClose" class="drawer-close" type="button" aria-label="關閉">✕</button>
+  </div>
+  <nav id="menuList" class="menu-list"></nav>
+  <div class="drawer-foot">OC class · 繁體中文版</div>
+</aside>
+
+<main id="app">
+
+  <!-- 一、初始設定 -->
+  <section id="screen-setup" class="screen hidden">
+    <div class="card">
+      <div class="mascot">
+        <svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true">
+          <circle cx="60" cy="64" r="38" fill="#FFE08A"/>
+          <path d="M34 30 l8 14 M86 30 l-8 14" stroke="#C9B6F0" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="52" fill="#FFF3C4" opacity=".55"/>
+          <circle cx="47" cy="58" r="5" fill="#5b4b6e"/>
+          <circle cx="73" cy="58" r="5" fill="#5b4b6e"/>
+          <path d="M50 74 q10 9 20 0" stroke="#5b4b6e" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle cx="38" cy="70" r="6" fill="#FFB4C2" opacity=".8"/>
+          <circle cx="82" cy="70" r="6" fill="#FFB4C2" opacity=".8"/>
+        </svg>
+      </div>
+      <h1 class="title">OC class</h1>
+      <p class="subtitle">嗨！歡迎來到 OC class，先告訴我們你的年級和班級吧～</p>
+      <div class="form-row">
+        <label class="field">
+          <span>年級</span>
+          <input id="inputGrade" type="number" inputmode="numeric" min="1" max="6" placeholder="例如 5" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>班級</span>
+          <input id="inputKlass" type="text" maxlength="4" placeholder="例如 3" autocomplete="off">
+        </label>
+      </div>
+      <p id="setupError" class="error hidden"></p>
+      <button id="setupConfirmBtn" class="btn btn-primary btn-big" type="button">確認</button>
+    </div>
+  </section>
+
+  <!-- 二、身分選擇 -->
+  <section id="screen-role" class="screen hidden">
+    <div class="card">
+      <h2 class="title-sm">請選擇你的身分</h2>
+      <p class="subtitle">每次重新整理或登出後，都要重新登錄一次。</p>
+      <p id="roleClassInfo" class="tip"></p>
+      <div class="role-buttons">
+        <button class="btn btn-role btn-teacher" data-role="teacher" type="button">
+          <span class="role-emoji">🧑‍🏫</span><span>教師登錄</span>
+        </button>
+        <button class="btn btn-role btn-student" data-role="student" type="button">
+          <span class="role-emoji">🎒</span><span>學生登錄</span>
+        </button>
+      </div>
+      <p id="roleError" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- 教師：第一次設定密碼 -->
+  <section id="screen-teacher-password-set" class="screen hidden">
+    <div class="card">
+      <div class="mascot">🔐</div>
+      <h2 class="title-sm">設定教師密碼</h2>
+      <p class="subtitle">第一次登錄，請先設定你自己的教師密碼。之後只要輸入這組密碼就能進入班級管理畫面。</p>
+      <label class="field field-block">
+        <span>教師密碼（至少 10 個字元）</span>
+        <input id="pwSet" type="password" autocomplete="new-password" placeholder="輸入密碼">
+      </label>
+      <label class="field field-block">
+        <span>再次輸入密碼</span>
+        <input id="pwSet2" type="password" autocomplete="new-password" placeholder="再輸入一次">
+      </label>
+      <p class="tip">⚠️ 請牢記你的密碼，避免忘記。</p>
+      <p id="pwSetError" class="error hidden"></p>
+      <button id="pwSetBtn" class="btn btn-primary btn-big" type="button">設定密碼</button>
+    </div>
+  </section>
+
+  <!-- 教師：輸入密碼登入 -->
+  <section id="screen-teacher-password-login" class="screen hidden">
+    <div class="card">
+      <div class="mascot">🧑‍🏫</div>
+      <h2 class="title-sm">教師密碼登入</h2>
+      <p class="subtitle">請輸入你的教師密碼以進入班級管理畫面。</p>
+      <label class="field field-block">
+        <span>教師密碼</span>
+        <input id="pwLogin" type="password" autocomplete="current-password" placeholder="輸入密碼">
+      </label>
+      <p id="pwLoginError" class="error hidden"></p>
+      <button id="pwLoginBtn" class="btn btn-primary btn-big" type="button">登入</button>
+      <button id="forgotBtn" class="btn btn-mini btn-ghost" type="button">忘記密碼？</button>
+    </div>
+  </section>
+
+  <!-- 教師：建立班級 -->
+  <section id="screen-teacher-setup" class="screen hidden">
+    <div class="card">
+      <div class="mascot">🏫</div>
+      <h2 class="title-sm">建立你的班級</h2>
+      <p class="subtitle">設定好之後，系統會幫每位同學準備專屬的登入號碼喔！</p>
+      <label class="field field-block">
+        <span>班級代碼</span>
+        <input id="inputClassCode" type="text" maxlength="10" placeholder="例如 OC503" autocomplete="off">
+      </label>
+      <label class="field field-block">
+        <span>學生人數</span>
+        <input id="inputStudentCount" type="number" inputmode="numeric" min="1" max="60" placeholder="例如 28" autocomplete="off">
+      </label>
+      <p id="teacherSetupError" class="error hidden"></p>
+      <button id="createClassBtn" class="btn btn-primary btn-big" type="button">建立班級</button>
+    </div>
+  </section>
+
+  <!-- 教師：班級管理首頁 -->
+  <section id="screen-teacher-home" class="screen hidden">
+    <div class="card card-wide">
+      <div class="class-head">
+        <h2 class="title-sm">我的班級</h2>
+        <div class="class-badges">
+          <span id="tGradeBadge" class="chip chip-purple"></span>
+          <span id="tKlassBadge" class="chip chip-blue"></span>
+          <span id="tCodeBadge" class="chip chip-yellow"></span>
+          <span id="tCountBadge" class="chip chip-green"></span>
+        </div>
+      </div>
+      <p class="hint">點一下同學的人物，就可以看到他的座號、登入號碼與狀態。</p>
+      <div id="studentGrid" class="student-grid"></div>
+      <div class="toolbar">
+        <button id="showAllBtn" class="btn btn-primary" type="button">📋 查看全班登入號碼</button>
+        <button id="goAssignAllBtn" class="btn" type="button">📚 派發全班作業</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 教師：個別作業派發 -->
+  <section id="screen-t-assign-individual" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">個別作業派發</h2>
+      <p class="hint">指定一位或多位同學，只有被指定的學生會看到這份作業。</p>
+
+      <label class="field field-block">
+        <span>選擇班級</span>
+        <select id="aiClass" class="select"></select>
+      </label>
+
+      <div class="sub-title">選擇學生 <span id="aiSelectedCount" class="count-badge">0 位</span></div>
+      <div class="pick-toolbar">
+        <button id="aiAll" class="btn btn-mini" type="button">全選</button>
+        <button id="aiNone" class="btn btn-mini btn-ghost" type="button">清除</button>
+      </div>
+      <div id="aiStudents" class="pick-grid"></div>
+
+      <label class="field field-block">
+        <span>作業名稱</span>
+        <input id="aiTitle" type="text" maxlength="60" placeholder="例如：數學練習卷第 3 回">
+      </label>
+      <label class="field field-block">
+        <span>作業內容</span>
+        <textarea id="aiContent" class="textarea" rows="4" maxlength="2000" placeholder="寫下作業的詳細說明"></textarea>
+      </label>
+      <div class="form-row">
+        <label class="field">
+          <span>截止日期（可不填）</span>
+          <input id="aiDue" type="date">
+        </label>
+        <label class="field">
+          <span>經驗值獎勵</span>
+          <input id="aiExp" type="number" inputmode="numeric" min="0" max="9999" placeholder="例如 50">
+        </label>
+        <label class="field">
+          <span>OC 金幣獎勵</span>
+          <input id="aiCoins" type="number" inputmode="numeric" min="0" max="9999" placeholder="例如 30">
+        </label>
+      </div>
+      <div class="ability-head">
+        <span class="sub-title">能力增益（可不設定）</span>
+        <button id="aiAddAbility" class="btn btn-mini" type="button">＋ 新增能力增益</button>
+      </div>
+      <div id="aiAbilities" class="ability-editor"></div>
+      <p id="aiError" class="error hidden"></p>
+      <p id="aiOk" class="success hidden"></p>
+      <button id="aiSubmit" class="btn btn-primary btn-big" type="button">派發作業</button>
+    </div>
+  </section>
+
+  <!-- 教師：全班作業派發 -->
+  <section id="screen-t-assign-all" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">全班作業派發</h2>
+      <p class="hint">作業會派發給該班級所有學生，每位學生都有獨立的完成紀錄。</p>
+      <label class="field field-block">
+        <span>選擇班級</span>
+        <select id="aaClass" class="select"></select>
+      </label>
+      <label class="field field-block">
+        <span>作業名稱</span>
+        <input id="aaTitle" type="text" maxlength="60" placeholder="例如：國語生字練習">
+      </label>
+      <label class="field field-block">
+        <span>作業內容</span>
+        <textarea id="aaContent" class="textarea" rows="4" maxlength="2000" placeholder="寫下作業的詳細說明"></textarea>
+      </label>
+      <div class="form-row">
+        <label class="field">
+          <span>截止日期（可不填）</span>
+          <input id="aaDue" type="date">
+        </label>
+        <label class="field">
+          <span>經驗值獎勵</span>
+          <input id="aaExp" type="number" inputmode="numeric" min="0" max="9999" placeholder="例如 40">
+        </label>
+        <label class="field">
+          <span>OC 金幣獎勵</span>
+          <input id="aaCoins" type="number" inputmode="numeric" min="0" max="9999" placeholder="例如 20">
+        </label>
+      </div>
+      <div class="ability-head">
+        <span class="sub-title">能力增益（可不設定）</span>
+        <button id="aaAddAbility" class="btn btn-mini" type="button">＋ 新增能力增益</button>
+      </div>
+      <div id="aaAbilities" class="ability-editor"></div>
+      <p id="aaError" class="error hidden"></p>
+      <p id="aaOk" class="success hidden"></p>
+      <button id="aaSubmit" class="btn btn-primary btn-big" type="button">派發作業</button>
+    </div>
+  </section>
+
+  <!-- 教師：作業紀錄 -->
+  <section id="screen-t-records" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">作業紀錄</h2>
+      <p class="hint">每份作業的全班完成狀態都會保存在伺服器。</p>
+      <div id="recordsList" class="records-list"></div>
+    </div>
+  </section>
+
+  <!-- 教師：設定 -->
+  <section id="screen-t-settings" class="screen hidden">
+    <div class="card">
+      <h2 class="title-sm">設定</h2>
+      <div class="info-box" id="settingsInfo"></div>
+
+      <div class="sub-title">帳號恢復代碼（備用）</div>
+      <p class="hint">現在忘記密碼時可以直接重設，不需要恢復代碼。這裡仍可取得一組備用代碼，輸入目前密碼即可重新產生（舊的會失效）。</p>
+      <label class="field field-block">
+        <span>目前密碼</span>
+        <input id="rcPassword" type="password" autocomplete="current-password" placeholder="輸入目前密碼">
+      </label>
+      <p id="rcError" class="error hidden"></p>
+      <p id="rcOk" class="success hidden"></p>
+      <button id="rcBtn" class="btn" type="button">取得恢復代碼</button>
+      <div class="divider"></div>
+      <button id="goPwChangeBtn" class="btn btn-primary" type="button">🔑 修改教師密碼</button>
+    </div>
+  </section>
+
+  <!-- 教師：密碼修改 -->
+  <section id="screen-t-password" class="screen hidden">
+    <div class="card">
+      <h2 class="title-sm">教師密碼修改</h2>
+      <p class="subtitle">修改前必須先驗證目前密碼，新密碼至少 10 個字元。</p>
+      <div class="info-box" id="pwChangeInfo"></div>
+      <label class="field field-block">
+        <span>目前密碼</span>
+        <input id="pwCur" type="password" autocomplete="current-password" placeholder="輸入目前密碼">
+      </label>
+      <label class="field field-block">
+        <span>新密碼（至少 10 個字元）</span>
+        <input id="pwNew" type="password" autocomplete="new-password" placeholder="輸入新密碼">
+      </label>
+      <label class="field field-block">
+        <span>再次輸入新密碼</span>
+        <input id="pwNew2" type="password" autocomplete="new-password" placeholder="再輸入一次新密碼">
+      </label>
+      <p id="pwChangeError" class="error hidden"></p>
+      <p id="pwChangeOk" class="success hidden"></p>
+      <button id="pwChangeBtn" class="btn btn-primary btn-big" type="button">確認修改</button>
+    </div>
+  </section>
+
+  <!-- 學生：登入 -->
+  <section id="screen-student-login" class="screen hidden">
+    <div class="card">
+      <div class="mascot">🎒</div>
+      <h2 class="title-sm">學生登入</h2>
+      <p class="subtitle">請輸入老師給你的班級代碼和五位數登入號碼。</p>
+      <label class="field field-block">
+        <span>班級代碼</span>
+        <input id="loginClassCode" type="text" maxlength="10" placeholder="例如 OC503" autocomplete="off">
+      </label>
+      <label class="field field-block">
+        <span>五位數登入號碼</span>
+        <input id="loginCode" type="text" inputmode="numeric" maxlength="5" placeholder="例如 48213" autocomplete="off">
+      </label>
+      <p id="loginError" class="error hidden"></p>
+      <button id="studentLoginBtn" class="btn btn-primary btn-big" type="button">登入</button>
+    </div>
+  </section>
+
+  <!-- 學生：我的資料（首頁） -->
+  <section id="screen-s-home" class="screen hidden">
+    <div class="card card-wide">
+      <div class="profile">
+        <div class="profile-left">
+          <div id="sAvatar" class="big-avatar"></div>
+          <div class="profile-name" id="sName"></div>
+        </div>
+        <div class="profile-right">
+          <div class="stat-row">
+            <div class="stat-box stat-level"><b id="sLevel">Lv.1</b><span>等級</span></div>
+            <div class="stat-box stat-exp"><b id="sExp">0</b><span id="sExpLabel">經驗值</span></div>
+          </div>
+          <div class="exp-bar"><div id="sExpFill" class="exp-fill"></div></div>
+          <div class="stat-row">
+            <div class="stat-box stat-coin">🪙<b id="sCoins">0</b><span>OC 金幣</span></div>
+            <div class="stat-box stat-diamond">💎<b id="sDiamonds">0</b><span>OC 鑽石</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="info-box info-inline">
+        <div class="info-row"><span>班級</span><b id="sClassInfo"></b></div>
+        <div class="info-row"><span>我的座號</span><b id="sSeat"></b></div>
+        <div class="info-row"><span>我的登入號碼</span><b id="sCode" class="code-text"></b></div>
+      </div>
+      <button id="copyMyCodeBtn" class="btn" type="button">複製我的登入號碼</button>
+      <p id="studentMsg" class="success hidden"></p>
+
+      <div class="divider"></div>
+      <div class="section-title">✨ 我的能力</div>
+      <p class="hint">能力由作業獎勵與穿戴的服飾累積，會保存在伺服器。</p>
+      <div id="sStats" class="ability-grid"></div>
+
+      <div class="divider"></div>
+      <div class="section-title">📚 全班作業</div>
+      <div id="homeAssignAll" class="assign-list"></div>
+      <div class="section-title">📌 指派給我的作業</div>
+      <div id="homeAssignMine" class="assign-list"></div>
+    </div>
+  </section>
+
+  <!-- 學生：我的作業 -->
+  <section id="screen-s-assignments" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">我的作業</h2>
+      <p class="hint">看看今天還有哪些作業還沒完成吧！完成狀態會保存在伺服器，重新登入一樣會在。</p>
+      <div class="section-title">📚 全班作業</div>
+      <div id="pageAssignAll" class="assign-list"></div>
+      <div class="section-title">📌 指派給我的作業</div>
+      <div id="pageAssignMine" class="assign-list"></div>
+    </div>
+  </section>
+
+  <!-- 學生：鑽石兌換 -->
+  <section id="screen-s-shop" class="screen hidden">
+    <div class="card">
+      <div class="mascot">💎</div>
+      <h2 class="title-sm">鑽石兌換</h2>
+      <p class="subtitle">用 OC 金幣兌換 OC 鑽石，交易紀錄會保存在伺服器。</p>
+      <div class="info-box">
+        <div class="info-row"><span>🪙 我的 OC 金幣</span><b id="shopCoins">0</b></div>
+        <div class="info-row"><span>💎 我的 OC 鑽石</span><b id="shopDiamonds">0</b></div>
+      </div>
+      <div class="exchange-box">
+        <div class="exchange-line"><span>🪙 500 OC 金幣</span><span class="arrow">➡️</span><span>💎 100 OC 鑽石</span></div>
+        <button id="exchangeBtn" class="btn btn-primary btn-big" type="button">兌換 100 OC 鑽石</button>
+      </div>
+      <p id="shopMsg" class="success hidden"></p>
+      <p id="shopError" class="error hidden"></p>
+      <div class="section-title">交易紀錄</div>
+      <div id="shopLogs" class="log-list"></div>
+    </div>
+  </section>
+
+  <!-- 學生：鑽石商店 -->
+  <section id="screen-s-store" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">💎 鑽石商店</h2>
+      <p class="hint">用 OC 鑽石購買角色服飾。每件商品都可以先預覽，購買後會永久保存在你的收藏中。</p>
+      <div class="store-top">
+        <div class="balance-pill">💎 <b id="storeDiamonds">0</b> OC 鑽石</div>
+        <div class="rarity-legend">
+          <span class="rarity rar-junk">破爛</span>
+          <span class="rarity rar-common">普通</span>
+          <span class="rarity rar-super">超級</span>
+          <span class="rarity rar-epic">✦ 史詩</span>
+        </div>
+      </div>
+      <div id="storeGrid" class="store-grid"></div>
+      <p id="storeMsg" class="success hidden"></p>
+      <p id="storeError" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- 學生：我的服飾／穿戴 -->
+  <section id="screen-s-wardrobe" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">👕 我的服飾</h2>
+      <p class="hint">選擇收藏中的服飾穿戴，角色會立即換裝；重新登入後仍然會穿著。</p>
+      <div class="wardrobe-head">
+        <div id="wardrobeAvatar" class="big-avatar"></div>
+        <div class="wardrobe-summary">
+          <div class="info-row"><span>目前穿戴</span><b id="wardrobeCount">0 件</b></div>
+          <div id="wardrobeWorn" class="worn-list"></div>
+          <div class="info-row"><span>能力加成</span><b id="wardrobeBonus">-</b></div>
+        </div>
+      </div>
+      <div id="wardrobeSlots" class="wardrobe-slots"></div>
+      <p id="wardrobeMsg" class="success hidden"></p>
+      <p id="wardrobeError" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- 學生：寶箱抽獎 -->
+  <section id="screen-s-chest" class="screen hidden">
+    <div class="card card-wide">
+      <h2 class="title-sm">🎁 寶箱抽獎</h2>
+      <p class="hint">每次抽獎都會由伺服器隨機決定結果，並保存在伺服器。抽到重複服飾也會保留為額外收藏。</p>
+      <div class="chest-top">
+        <div id="chestBox" class="chest-box">
+          <div class="chest-lid"></div>
+          <div class="chest-body">🎁</div>
+          <div class="chest-spark">✦</div>
+        </div>
+        <div class="chest-info">
+          <div class="chest-price">抽一次 <b>60</b> 💎</div>
+          <div class="info-row"><span>💎 我的鑽石</span><b id="chestDiamonds">0</b></div>
+          <div class="info-row"><span>🎁 已抽次數</span><b id="chestTimes">0</b></div>
+          <button id="chestDrawBtn" class="btn btn-primary btn-big" type="button">開啟寶箱</button>
+          <p id="chestMsg" class="success hidden"></p>
+          <p id="chestError" class="error hidden"></p>
+        </div>
+      </div>
+      <div class="section-title">🎁 可能獲得的服飾</div>
+      <div id="chestPool" class="pool-grid"></div>
+      <div class="section-title">抽獎紀錄</div>
+      <div id="chestLogs" class="log-list"></div>
+    </div>
+  </section>
+
+  <!-- 學生：OC 房子（獨立 3D 空間） -->
+  <section id="screen-s-house" class="screen hidden">
+    <div class="card card-wide house-card house-3d-card">
+      <div class="house-head">
+        <div>
+          <h2 class="title-sm">OC 房子</h2>
+          <p class="hint">這是只屬於你的草原與小屋，同學不會連進來打擾你。</p>
+        </div>
+        <span class="house-privacy">私人空間</span>
+      </div>
+
+      <div id="houseNaming" class="house-naming hidden">
+        <div class="house-naming-art">🏡</div>
+        <h3 id="houseNamingTitle" class="house-ask">先幫你的房子取個名字吧！</h3>
+        <p class="subtitle">這個名字會掛在房子門口的木牌上，只有你自己看得到。</p>
+        <label class="field field-block">
+          <span>我的房子叫做…（最多 12 個字）</span>
+          <input id="houseNameInput" type="text" maxlength="12" placeholder="例如：星星小屋、軟糖城堡" autocomplete="off">
+        </label>
+        <p id="houseNameError" class="error hidden"></p>
+        <div class="house-naming-actions">
+          <button id="houseNameBtn" class="btn btn-primary btn-big" type="button">蓋好我的房子</button>
+          <button id="houseNameCancel" class="btn btn-ghost hidden" type="button">取消</button>
+        </div>
+        <p class="tip">房子與家具都保存在伺服器，換裝置登入也還在。</p>
+      </div>
+
+      <div id="houseView" class="hidden">
+        <div id="houseStage" class="house-stage">
+          <div id="houseCanvasHost" class="house-canvas-host"></div>
+
+          <div id="houseLoading" class="house-loading">
+            <span class="house-loading-art">🌿</span>
+            <b>正在佈置你的草原…</b>
+          </div>
+
+          <div class="house-hud">
+            <div class="house-hud-left">
+              <span class="house-chip"><b id="houseNamePill"></b></span>
+              <span class="house-chip">💎 <b id="houseDiamondCount">0</b></span>
+              <span class="house-chip house-chip-soft"><b id="houseSince">-</b></span>
+            </div>
+            <div class="house-hud-right">
+              <button id="houseCardShortcut" class="house-mini-btn house-mini-gold" type="button">家具全擁有卡</button>
+              <button id="houseRenameBtn" class="house-mini-btn" type="button">改名</button>
+            </div>
+          </div>
+
+          <button id="housePanelToggle" class="house-panel-toggle" type="button" aria-label="展開建造面板" aria-expanded="false">›</button>
+
+          <aside id="houseBuildPanel" class="house-build-panel hidden" aria-label="建造面板">
+            <div class="hbp-head">
+              <div>
+                <b>建造面板</b>
+                <small>選一個物件放進你的草原</small>
+              </div>
+              <button id="housePanelClose" class="hbp-close" type="button" aria-label="收起面板">✕</button>
+            </div>
+            <div id="houseBuildTabs" class="hbp-tabs" role="tablist"></div>
+            <div id="houseBuildGrid" class="hbp-grid"></div>
+            <p id="houseBuildHint" class="hbp-hint">點選物件後，在草原上點一下就能放下。</p>
+          </aside>
+
+          <div id="houseEditBar" class="house-mode-bar house-edit-bar">
+            <div class="house-edit-info">
+              <span id="houseEditCount">0 / 80</span>
+              <span id="houseSaveState" class="house-save-state">已同步</span>
+            </div>
+            <button id="houseFinishBtn" class="btn btn-primary house-finish-btn" type="button">完成，去逛逛</button>
+          </div>
+
+          <div id="houseExploreBar" class="house-mode-bar house-explore-bar hidden">
+            <span id="houseExploreTip" class="house-explore-tip">點一下畫面開始探索</span>
+            <button id="houseViewHouseBtn" class="btn btn-ghost house-finish-btn" type="button">檢視房屋</button>
+            <button id="houseRedecorateBtn" class="btn btn-ghost house-finish-btn" type="button">重新裝飾</button>
+          </div>
+
+          <div id="houseSelectionBar" class="house-selection-bar hidden">
+            <b id="houseSelName">物件</b>
+            <button type="button" data-act="rotl" title="向左旋轉">↺</button>
+            <button type="button" data-act="rotr" title="向右旋轉">↻</button>
+            <button type="button" data-act="inspect" title="放大檢視">放大檢視</button>
+            <button type="button" data-act="smaller" title="縮小">－</button>
+            <span id="houseSelScale">100%</span>
+            <button type="button" data-act="bigger" title="放大">＋</button>
+            <button type="button" data-act="delete" class="house-sel-delete" title="刪除">刪除</button>
+          </div>
+
+          <div id="houseJoystick" class="house-joystick hidden" aria-hidden="true">
+            <div class="hj-base"><div id="houseJoystickKnob" class="hj-knob">✦</div></div>
+          </div>
+        </div>
+
+        <p class="house-note">🌿 編輯模式可以蓋房子、擺家具、種花草；完成後就能用第一人稱在草原上散步。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 學生：家具全擁有卡 -->
+  <section id="screen-s-card" class="screen hidden">
+    <div class="card card-wide house-card card-shop-card">
+      <div class="house-head">
+        <div>
+          <h2 class="title-sm">✨ 家具全擁有卡</h2>
+          <p class="hint">一次解鎖現在與未來新增的全部家具、裝飾品與房屋外觀。</p>
+        </div>
+        <span id="cardOwnedBadge" class="house-privacy hidden">✅ 已解鎖全部家具</span>
+      </div>
+
+      <div class="all-card-hero">
+        <div class="all-card-art">🎴</div>
+        <div class="all-card-copy">
+          <h3>把整間小屋的靈感都帶回家</h3>
+          <ul class="all-card-list">
+            <li>全部家具：床、桌子、沙發、書架、燈具、電視櫃、衣櫃、電腦桌、辦公椅、冰箱、微波爐、瓦斯爐、餐桌、餐椅、櫥櫃、浴缸、洗手台、馬桶、窗簾、地毯、裝飾畫…</li>
+            <li>全部裝飾：花草、樹木、路燈、畫架、大盆栽、掛鐘…</li>
+            <li>全部房屋外觀：奶油小屋、蘑菇小屋、雲朵小屋、星星城堡…</li>
+            <li>未來新增的家具也會自動包含在內</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="all-card-price-box">
+        <div class="all-card-price"><span>💎</span><b id="cardPrice">500</b><small>OC 鑽石</small></div>
+        <p id="cardDiamondNote" class="all-card-diamond">你目前有 0 顆鑽石。</p>
+        <p id="cardStatus" class="all-card-status"></p>
+        <button id="cardBuyBtn" class="btn btn-primary btn-big" type="button">用 500 鑽石解鎖全部家具</button>
+        <p class="tip">每個帳號只能購買一次；購買後不會再重複扣款。</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">OC class · 給小學生的可愛班級小幫手</footer>
+
+<!-- 學生資料視窗（教師點擊人物） -->
+<div id="modalMask" class="modal-mask hidden">
+  <div class="modal">
+    <button id="modalClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <div id="modalAvatar" class="big-avatar"></div>
+    <h3 id="modalTitle" class="title-sm"></h3>
+    <div class="info-box">
+      <div class="info-row"><span>座號</span><b id="modalNo"></b></div>
+      <div class="info-row"><span>登入號碼</span><b id="modalCode" class="code-text"></b></div>
+      <div class="info-row"><span>等級 / 經驗值</span><b id="modalLevel"></b></div>
+      <div class="info-row"><span>OC 金幣 / 鑽石</span><b id="modalMoney"></b></div>
+      <div class="info-row"><span>五種能力</span><b id="modalStats"></b></div>
+      <div class="info-row"><span>目前穿戴</span><b id="modalWorn"></b></div>
+    </div>
+    <button id="modalCopyBtn" class="btn btn-primary btn-big" type="button">複製登入號碼</button>
+    <p id="modalMsg" class="success hidden"></p>
+  </div>
+</div>
+
+<!-- 全班號碼視窗 -->
+<div id="allMask" class="modal-mask hidden">
+  <div class="modal modal-wide">
+    <button id="allClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <h3 class="title-sm">全班登入號碼</h3>
+    <p class="hint">點一下任一列可以快速複製。</p>
+    <div id="allList" class="all-list"></div>
+    <button id="allCopyBtn" class="btn btn-primary" type="button">全部複製</button>
+    <p id="allMsg" class="success hidden"></p>
+  </div>
+</div>
+
+<!-- 忘記密碼（直接設定新密碼） -->
+<div id="forgotMask" class="modal-mask hidden">
+  <div class="modal">
+    <button id="forgotClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <h3 class="title-sm">重新設定教師密碼</h3>
+    <p class="hint">不需要恢復代碼，直接輸入兩次新密碼即可重設。</p>
+    <label class="field field-block">
+      <span>新密碼（至少 10 個字元）</span>
+      <input id="fgNew" type="password" autocomplete="new-password">
+    </label>
+    <label class="field field-block">
+      <span>再次輸入新密碼</span>
+      <input id="fgNew2" type="password" autocomplete="new-password">
+    </label>
+    <p id="fgError" class="error hidden"></p>
+    <button id="fgBtn" class="btn btn-primary btn-big" type="button">直接重設密碼</button>
+  </div>
+</div>
+
+<!-- 設定密碼後顯示恢復代碼 -->
+<div id="rcMask" class="modal-mask hidden">
+  <div class="modal">
+    <button id="rcClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <div class="mascot">🔑</div>
+    <h3 class="title-sm">帳號恢復代碼</h3>
+    <p class="hint">請立即保存這組代碼！忘記密碼時可用它重設密碼。離開此視窗後將無法再次查看這組代碼。</p>
+    <div class="recovery-code" id="rcCode"></div>
+    <button id="rcCopyBtn" class="btn btn-primary btn-big" type="button">複製恢復代碼</button>
+    <p id="rcCopyMsg" class="success hidden"></p>
+  </div>
+</div>
+
+<!-- 重設視窗 -->
+<div id="resetMask" class="modal-mask hidden">
+  <div class="modal">
+    <button id="resetClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <h3 class="title-sm">重設 OC class</h3>
+    <p class="hint">這是受保護的流程，需要輸入管理代碼。重設會清除班級、密碼、作業與學生資產。</p>
+    <label class="field field-block">
+      <span>管理代碼</span>
+      <input id="resetCode" type="password" placeholder="請向管理者取得" autocomplete="off">
+    </label>
+    <p id="resetError" class="error hidden"></p>
+    <button id="resetConfirmBtn" class="btn btn-danger btn-big" type="button">確認重設</button>
+  </div>
+</div>
+
+<!-- 商品預覽 -->
+<div id="itemMask" class="modal-mask hidden">
+  <div class="modal modal-wide">
+    <button id="itemClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <div id="itemAvatar" class="big-avatar"></div>
+    <h3 id="itemName" class="title-sm"></h3>
+    <div id="itemRarity" class="item-rarity"></div>
+    <div class="info-box">
+      <div class="info-row"><span>價格</span><b id="itemPrice"></b></div>
+      <div class="info-row"><span>部位</span><b id="itemSlot"></b></div>
+      <div class="info-row"><span>能力增益</span><b id="itemStats"></b></div>
+      <div class="info-row"><span>我的收藏</span><b id="itemOwned"></b></div>
+    </div>
+    <p id="itemError" class="error hidden"></p>
+    <button id="itemBuyBtn" class="btn btn-primary btn-big" type="button">購買</button>
+    <p id="itemMsg" class="success hidden"></p>
+  </div>
+</div>
+
+<!-- 寶箱抽獎結果 -->
+<div id="chestMask" class="modal-mask hidden">
+  <div class="modal">
+    <button id="chestClose" class="modal-close" type="button" aria-label="關閉">✕</button>
+    <div class="mascot">🎉</div>
+    <h3 class="title-sm">抽獎結果</h3>
+    <div id="chestResultAvatar" class="big-avatar"></div>
+    <div id="chestResultRarity" class="item-rarity"></div>
+    <h4 id="chestResultName" class="result-name"></h4>
+    <p id="chestResultMsg" class="success"></p>
+    <button id="chestOkBtn" class="btn btn-primary btn-big" type="button">收下！</button>
+  </div>
+</div>
+
+<div id="houseCardMask" class="modal-mask hidden">
+  <div class="modal">
+    <h3 class="modal-title">確定要購買家具全擁有卡嗎？</h3>
+    <p class="modal-text">這次會花費 <b class="modal-price">500 OC 鑽石</b>，購買後立即解鎖全部家具、裝飾品與房屋外觀。</p>
+    <p class="modal-text modal-soft">同一個帳號只能購買一次，之後不會再重複扣款。</p>
+    <p id="houseCardError" class="error hidden"></p>
+    <div class="modal-actions">
+      <button id="houseCardCancel" class="btn btn-ghost" type="button">再想想</button>
+      <button id="houseCardConfirm" class="btn btn-primary" type="button">確定購買</button>
+    </div>
+  </div>
+</div>
+
+<div id="houseBuyMask" class="modal-mask hidden">
+  <div class="modal">
+    <h3 id="houseBuyTitle" class="modal-title">解鎖物件</h3>
+    <p id="houseBuyText" class="modal-text"></p>
+    <p id="houseBuyError" class="error hidden"></p>
+    <div class="modal-actions">
+      <button id="houseBuyCancel" class="btn btn-ghost" type="button">先不要</button>
+      <button id="houseBuyConfirm" class="btn btn-primary" type="button">確定解鎖</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js?v=10"></script>
+</body>
+</html>
