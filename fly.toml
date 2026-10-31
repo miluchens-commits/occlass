@@ -1,0 +1,29 @@
+app = "occlass"
+primary_region = "ams"
+
+[build]
+  # 使用 Dockerfile 建置
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
+
+[experimental]
+  auto_rollback = true
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.tcp_checks]]
+    interval = "10s"
+    timeout = "2s"
+    port = 8080
+
+[[mounts]]
+  source = "occlass_data"
+  destination = "/app/data"

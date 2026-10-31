@@ -1,0 +1,16 @@
+node_modules/
+data/
+.git/
+.gitignore
+Dockerfile
+docker-compose*
+*.md
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+npm-debug.log*
+.DS_Store
+.nyc_output
+coverage/
+.tmp/
